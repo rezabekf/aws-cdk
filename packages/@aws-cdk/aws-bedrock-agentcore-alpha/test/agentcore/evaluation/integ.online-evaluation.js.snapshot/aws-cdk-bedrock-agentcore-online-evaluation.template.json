@@ -225,7 +225,7 @@
    }
   },
   "BasicEvaluation44DD84CD": {
-   "Type": "Custom::BedrockAgentCoreOnlineEvaluationConfig",
+   "Type": "Custom::BedrockAgentCoreOnlineEvaluation",
    "Properties": {
     "ServiceToken": {
      "Fn::GetAtt": [

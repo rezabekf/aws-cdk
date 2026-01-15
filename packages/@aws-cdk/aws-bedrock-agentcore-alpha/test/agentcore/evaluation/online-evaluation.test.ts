@@ -15,14 +15,14 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Template, Match } from 'aws-cdk-lib/assertions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import {
-  OnlineEvaluationConfig,
+  OnlineEvaluation,
   EvaluatorReference,
   DataSourceConfig,
   BuiltinEvaluator,
   FilterOperator,
 } from '../../../lib';
 
-describe('OnlineEvaluationConfig', () => {
+describe('OnlineEvaluation', () => {
   let app: App;
   let stack: Stack;
 
@@ -34,9 +34,9 @@ describe('OnlineEvaluationConfig', () => {
   });
 
   describe('creation with minimal props', () => {
-    test('creates OnlineEvaluationConfig with CloudWatch Logs data source', () => {
+    test('creates OnlineEvaluation with CloudWatch Logs data source', () => {
       // WHEN
-      new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+      new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'test_evaluation',
         evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
         dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -49,7 +49,7 @@ describe('OnlineEvaluationConfig', () => {
       const template = Template.fromStack(stack);
 
       // Verify custom resource is created
-      template.hasResourceProperties('Custom::BedrockAgentCoreOnlineEvaluationConfig', {});
+      template.hasResourceProperties('Custom::BedrockAgentCoreOnlineEvaluation', {});
 
       // Verify execution role is created
       template.hasResourceProperties('AWS::IAM::Role', {
@@ -67,9 +67,9 @@ describe('OnlineEvaluationConfig', () => {
       });
     });
 
-    test('creates OnlineEvaluationConfig with Agent Endpoint data source', () => {
+    test('creates OnlineEvaluation with Agent Endpoint data source', () => {
       // WHEN
-      new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+      new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'test_evaluation',
         evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.CORRECTNESS)],
         dataSource: DataSourceConfig.fromAgentEndpoint({
@@ -80,19 +80,19 @@ describe('OnlineEvaluationConfig', () => {
 
       // THEN
       const template = Template.fromStack(stack);
-      template.hasResourceProperties('Custom::BedrockAgentCoreOnlineEvaluationConfig', {});
+      template.hasResourceProperties('Custom::BedrockAgentCoreOnlineEvaluation', {});
     });
   });
 
   describe('creation with all props', () => {
-    test('creates OnlineEvaluationConfig with all options', () => {
+    test('creates OnlineEvaluation with all options', () => {
       // GIVEN
       const executionRole = new iam.Role(stack, 'ExecutionRole', {
         assumedBy: new iam.ServicePrincipal('bedrock-agentcore.amazonaws.com'),
       });
 
       // WHEN
-      new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+      new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'full_evaluation',
         evaluators: [
           EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS),
@@ -122,7 +122,7 @@ describe('OnlineEvaluationConfig', () => {
 
       // THEN
       const template = Template.fromStack(stack);
-      template.hasResourceProperties('Custom::BedrockAgentCoreOnlineEvaluationConfig', {});
+      template.hasResourceProperties('Custom::BedrockAgentCoreOnlineEvaluation', {});
     });
   });
 
@@ -207,7 +207,7 @@ describe('OnlineEvaluationConfig', () => {
     test('throws error for invalid config name - starts with number', () => {
       // THEN
       expect(() => {
-        new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+        new OnlineEvaluation(stack, 'TestEvaluation', {
           configName: '123invalid',
           evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
           dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -221,7 +221,7 @@ describe('OnlineEvaluationConfig', () => {
     test('throws error for config name too long', () => {
       // THEN
       expect(() => {
-        new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+        new OnlineEvaluation(stack, 'TestEvaluation', {
           configName: 'a'.repeat(49),
           evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
           dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -235,7 +235,7 @@ describe('OnlineEvaluationConfig', () => {
     test('throws error for empty evaluators array', () => {
       // THEN
       expect(() => {
-        new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+        new OnlineEvaluation(stack, 'TestEvaluation', {
           configName: 'test_evaluation',
           evaluators: [],
           dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -249,7 +249,7 @@ describe('OnlineEvaluationConfig', () => {
     test('throws error for too many evaluators', () => {
       // THEN
       expect(() => {
-        new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+        new OnlineEvaluation(stack, 'TestEvaluation', {
           configName: 'test_evaluation',
           evaluators: Array(11).fill(EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)),
           dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -263,7 +263,7 @@ describe('OnlineEvaluationConfig', () => {
     test('throws error for invalid sampling percentage - too low', () => {
       // THEN
       expect(() => {
-        new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+        new OnlineEvaluation(stack, 'TestEvaluation', {
           configName: 'test_evaluation',
           evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
           dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -278,7 +278,7 @@ describe('OnlineEvaluationConfig', () => {
     test('throws error for invalid sampling percentage - too high', () => {
       // THEN
       expect(() => {
-        new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+        new OnlineEvaluation(stack, 'TestEvaluation', {
           configName: 'test_evaluation',
           evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
           dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -293,7 +293,7 @@ describe('OnlineEvaluationConfig', () => {
     test('throws error for too many filters', () => {
       // THEN
       expect(() => {
-        new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+        new OnlineEvaluation(stack, 'TestEvaluation', {
           configName: 'test_evaluation',
           evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
           dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -312,7 +312,7 @@ describe('OnlineEvaluationConfig', () => {
     test('throws error for invalid session timeout - too low', () => {
       // THEN
       expect(() => {
-        new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+        new OnlineEvaluation(stack, 'TestEvaluation', {
           configName: 'test_evaluation',
           evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
           dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -327,7 +327,7 @@ describe('OnlineEvaluationConfig', () => {
     test('throws error for invalid session timeout - too high', () => {
       // THEN
       expect(() => {
-        new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+        new OnlineEvaluation(stack, 'TestEvaluation', {
           configName: 'test_evaluation',
           evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
           dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -342,7 +342,7 @@ describe('OnlineEvaluationConfig', () => {
     test('throws error for description too long', () => {
       // THEN
       expect(() => {
-        new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+        new OnlineEvaluation(stack, 'TestEvaluation', {
           configName: 'test_evaluation',
           evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
           dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -358,7 +358,7 @@ describe('OnlineEvaluationConfig', () => {
   describe('IAM role', () => {
     test('auto-creates execution role with required permissions', () => {
       // WHEN
-      new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+      new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'test_evaluation',
         evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
         dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -395,7 +395,7 @@ describe('OnlineEvaluationConfig', () => {
       });
 
       // WHEN
-      const evaluation = new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+      const evaluation = new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'test_evaluation',
         evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
         dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -413,7 +413,7 @@ describe('OnlineEvaluationConfig', () => {
   describe('grant methods', () => {
     test('grantAdmin grants control plane permissions', () => {
       // GIVEN
-      const evaluation = new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+      const evaluation = new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'test_evaluation',
         evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
         dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -452,7 +452,7 @@ describe('OnlineEvaluationConfig', () => {
   describe('import methods', () => {
     test('fromConfigId imports by ID', () => {
       // WHEN
-      const imported = OnlineEvaluationConfig.fromConfigId(stack, 'Imported', 'my-config-id');
+      const imported = OnlineEvaluation.fromConfigId(stack, 'Imported', 'my-config-id');
 
       // THEN
       expect(imported.configId).toBe('my-config-id');
@@ -461,7 +461,7 @@ describe('OnlineEvaluationConfig', () => {
 
     test('fromConfigArn imports by ARN', () => {
       // WHEN
-      const imported = OnlineEvaluationConfig.fromConfigArn(
+      const imported = OnlineEvaluation.fromConfigArn(
         stack,
         'Imported',
         'arn:aws:bedrock-agentcore:us-east-1:123456789012:online-evaluation-config/my-config-id',
@@ -476,7 +476,7 @@ describe('OnlineEvaluationConfig', () => {
 
     test('fromAttributes imports with all attributes', () => {
       // WHEN
-      const imported = OnlineEvaluationConfig.fromAttributes(stack, 'Imported', {
+      const imported = OnlineEvaluation.fromAttributes(stack, 'Imported', {
         configArn: 'arn:aws:bedrock-agentcore:us-east-1:123456789012:online-evaluation-config/my-config-id',
         configId: 'my-config-id',
         configName: 'my_config',
@@ -493,7 +493,7 @@ describe('OnlineEvaluationConfig', () => {
   describe('metrics', () => {
     test('metric returns CloudWatch metric', () => {
       // GIVEN
-      const evaluation = new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+      const evaluation = new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'test_evaluation',
         evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
         dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -512,7 +512,7 @@ describe('OnlineEvaluationConfig', () => {
 
     test('metricEvaluationCount returns evaluation count metric', () => {
       // GIVEN
-      const evaluation = new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+      const evaluation = new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'test_evaluation',
         evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
         dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -530,7 +530,7 @@ describe('OnlineEvaluationConfig', () => {
 
     test('metricEvaluationErrors returns errors metric', () => {
       // GIVEN
-      const evaluation = new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+      const evaluation = new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'test_evaluation',
         evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
         dataSource: DataSourceConfig.fromCloudWatchLogs({
@@ -548,7 +548,7 @@ describe('OnlineEvaluationConfig', () => {
 
     test('metricEvaluationLatency returns latency metric', () => {
       // GIVEN
-      const evaluation = new OnlineEvaluationConfig(stack, 'TestEvaluation', {
+      const evaluation = new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'test_evaluation',
         evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS)],
         dataSource: DataSourceConfig.fromCloudWatchLogs({

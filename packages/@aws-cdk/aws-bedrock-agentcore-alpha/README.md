@@ -2231,7 +2231,7 @@ The Online Evaluation construct enables continuous monitoring and assessment of 
 Create an online evaluation configuration with built-in evaluators:
 
 ```typescript fixture=default
-const evaluation = new agentcore.OnlineEvaluationConfig(this, 'MyEvaluation', {
+const evaluation = new agentcore.OnlineEvaluation(this, 'MyEvaluation', {
   configName: 'my_evaluation',
   evaluators: [
     agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
@@ -2271,7 +2271,7 @@ Amazon Bedrock AgentCore provides 13 built-in evaluators that assess different a
 - `TOOL_CALL_QUALITY` - The quality of tool call parameters and execution
 
 ```typescript fixture=default
-const evaluation = new agentcore.OnlineEvaluationConfig(this, 'ComprehensiveEval', {
+const evaluation = new agentcore.OnlineEvaluation(this, 'ComprehensiveEval', {
   configName: 'comprehensive_evaluation',
   evaluators: [
     // Session level
@@ -2300,7 +2300,7 @@ Online evaluation supports two types of data sources:
 **CloudWatch Logs Data Source:**
 
 ```typescript fixture=default
-const evaluation = new agentcore.OnlineEvaluationConfig(this, 'CloudWatchEval', {
+const evaluation = new agentcore.OnlineEvaluation(this, 'CloudWatchEval', {
   configName: 'cloudwatch_evaluation',
   evaluators: [
     agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
@@ -2320,7 +2320,7 @@ const evaluation = new agentcore.OnlineEvaluationConfig(this, 'CloudWatchEval', 
 ```typescript fixture=default
 declare const runtime: agentcore.Runtime;
 
-const evaluation = new agentcore.OnlineEvaluationConfig(this, 'EndpointEval', {
+const evaluation = new agentcore.OnlineEvaluation(this, 'EndpointEval', {
   configName: 'endpoint_evaluation',
   evaluators: [
     agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.CORRECTNESS),
@@ -2337,7 +2337,7 @@ const evaluation = new agentcore.OnlineEvaluationConfig(this, 'EndpointEval', {
 Configure sampling percentage and filters to control which traces are evaluated:
 
 ```typescript fixture=default
-const evaluation = new agentcore.OnlineEvaluationConfig(this, 'FilteredEval', {
+const evaluation = new agentcore.OnlineEvaluation(this, 'FilteredEval', {
   configName: 'filtered_evaluation',
   evaluators: [
     agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
@@ -2386,7 +2386,7 @@ executionRole.addToPolicy(new iam.PolicyStatement({
   resources: ['arn:aws:logs:*:*:log-group:/aws/bedrock-agentcore/*'],
 }));
 
-const evaluation = new agentcore.OnlineEvaluationConfig(this, 'CustomRoleEval', {
+const evaluation = new agentcore.OnlineEvaluation(this, 'CustomRoleEval', {
   configName: 'custom_role_evaluation',
   evaluators: [
     agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
@@ -2404,7 +2404,7 @@ const evaluation = new agentcore.OnlineEvaluationConfig(this, 'CustomRoleEval', 
 Grant IAM permissions to manage or read evaluation configurations:
 
 ```typescript fixture=default
-declare const evaluation: agentcore.OnlineEvaluationConfig;
+declare const evaluation: agentcore.OnlineEvaluation;
 declare const role: iam.IRole;
 
 // Grant full admin permissions (create, read, update, delete)
@@ -2412,8 +2412,8 @@ evaluation.grantAdmin(role);
 
 // Grant specific permissions
 evaluation.grant(role,
-  'bedrock-agentcore:GetOnlineEvaluationConfig',
-  'bedrock-agentcore:UpdateOnlineEvaluationConfig',
+  'bedrock-agentcore:GetOnlineEvaluation',
+  'bedrock-agentcore:UpdateOnlineEvaluation',
 );
 ```
 
@@ -2422,7 +2422,7 @@ evaluation.grant(role,
 Monitor evaluation performance with CloudWatch metrics:
 
 ```typescript fixture=default
-declare const evaluation: agentcore.OnlineEvaluationConfig;
+declare const evaluation: agentcore.OnlineEvaluation;
 
 // Create a metric for evaluation execution count
 const executionMetric = evaluation.metric('ExecutionCount', {

@@ -22,9 +22,9 @@ import { EvaluationPerms } from './perms';
  *****************************************************************************/
 
 /**
- * Interface for OnlineEvaluationConfig resources.
+ * Interface for OnlineEvaluation resources.
  */
-export interface IOnlineEvaluationConfig extends IResource, iam.IGrantable {
+export interface IOnlineEvaluation extends IResource, iam.IGrantable {
   /**
    * The ARN of the online evaluation configuration.
    * @attribute
@@ -96,10 +96,10 @@ export interface IOnlineEvaluationConfig extends IResource, iam.IGrantable {
  *****************************************************************************/
 
 /**
- * Abstract base class for OnlineEvaluationConfig.
+ * Abstract base class for OnlineEvaluation.
  * Contains methods and attributes valid for configurations either created with CDK or imported.
  */
-export abstract class OnlineEvaluationConfigBase extends Resource implements IOnlineEvaluationConfig {
+export abstract class OnlineEvaluationBase extends Resource implements IOnlineEvaluation {
   public abstract readonly configArn: string;
   public abstract readonly configId: string;
   public abstract readonly configName: string;
@@ -155,7 +155,7 @@ export abstract class OnlineEvaluationConfigBase extends Resource implements IOn
     const metricProps: MetricProps = {
       namespace: 'AWS/Bedrock-AgentCore',
       metricName,
-      dimensionsMap: { OnlineEvaluationConfigId: this.configId },
+      dimensionsMap: { OnlineEvaluationId: this.configId },
       ...props,
     };
     return this.configureMetric(metricProps);

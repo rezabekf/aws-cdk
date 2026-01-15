@@ -66,5 +66,5 @@ export * from './evaluation/types';
 export * from './evaluation/perms';
 export * from './evaluation/evaluator';
 export * from './evaluation/data-source';
-export * from './evaluation/online-evaluation-config-base';
-export * from './evaluation/online-evaluation-config';
+export * from './evaluation/online-evaluation-base';
+export * from './evaluation/online-evaluation';

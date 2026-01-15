@@ -226,11 +226,11 @@ export interface AgentEndpointDataSourceConfig {
 }
 
 /**
- * Base properties for creating an OnlineEvaluationConfig.
- * The actual OnlineEvaluationConfigProps is defined in online-evaluation-config.ts
+ * Base properties for creating an OnlineEvaluation.
+ * The actual OnlineEvaluationProps is defined in online-evaluation-config.ts
  * to avoid circular dependencies.
  */
-export interface OnlineEvaluationConfigBaseProps {
+export interface OnlineEvaluationBaseProps {
   /**
    * The name of the online evaluation configuration.
    *
@@ -301,9 +301,9 @@ export interface OnlineEvaluationConfigBaseProps {
 }
 
 /**
- * Attributes for importing an existing OnlineEvaluationConfig.
+ * Attributes for importing an existing OnlineEvaluation.
  */
-export interface OnlineEvaluationConfigAttributes {
+export interface OnlineEvaluationAttributes {
   /**
    * The ARN of the online evaluation configuration.
    */

@@ -19,11 +19,11 @@ import * as cr from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { DataSourceConfig } from './data-source';
 import { EvaluatorReference } from './evaluator';
-import { IOnlineEvaluationConfig, OnlineEvaluationConfigBase } from './online-evaluation-config-base';
+import { IOnlineEvaluation, OnlineEvaluationBase } from './online-evaluation-base';
 import { EvaluationPerms } from './perms';
 import {
-  OnlineEvaluationConfigBaseProps,
-  OnlineEvaluationConfigAttributes,
+  OnlineEvaluationBaseProps,
+  OnlineEvaluationAttributes,
   ExecutionStatus,
 } from './types';
 import {
@@ -41,9 +41,9 @@ import {
  *****************************************************************************/
 
 /**
- * Properties for creating an OnlineEvaluationConfig.
+ * Properties for creating an OnlineEvaluation.
  */
-export interface OnlineEvaluationConfigProps extends OnlineEvaluationConfigBaseProps {
+export interface OnlineEvaluationProps extends OnlineEvaluationBaseProps {
   /**
    * The list of evaluators to apply during online evaluation.
    *
@@ -74,7 +74,7 @@ export interface OnlineEvaluationConfigProps extends OnlineEvaluationConfigBaseP
  *
  * @example
  * // Basic usage with built-in evaluators
- * const evaluation = new agentcore.OnlineEvaluationConfig(this, 'MyEvaluation', {
+ * const evaluation = new agentcore.OnlineEvaluation(this, 'MyEvaluation', {
  *   configName: 'my_evaluation',
  *   evaluators: [
  *     agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
@@ -87,24 +87,24 @@ export interface OnlineEvaluationConfigProps extends OnlineEvaluationConfigBaseP
  * });
  */
 @propertyInjectable
-export class OnlineEvaluationConfig extends OnlineEvaluationConfigBase {
+export class OnlineEvaluation extends OnlineEvaluationBase {
   /** Uniquely identifies this class. */
   public static readonly PROPERTY_INJECTION_ID: string =
-    '@aws-cdk.aws-bedrock-agentcore-alpha.OnlineEvaluationConfig';
+    '@aws-cdk.aws-bedrock-agentcore-alpha.OnlineEvaluation';
 
   /**
-   * Import an existing OnlineEvaluationConfig by its ID.
+   * Import an existing OnlineEvaluation by its ID.
    *
    * @param scope - The construct scope
    * @param id - Construct identifier
    * @param configId - The configuration ID to import
-   * @returns An IOnlineEvaluationConfig reference
+   * @returns An IOnlineEvaluation reference
    */
   public static fromConfigId(
     scope: Construct,
     id: string,
     configId: string,
-  ): IOnlineEvaluationConfig {
+  ): IOnlineEvaluation {
     const stack = Stack.of(scope);
     const configArn = Arn.format(
       {
@@ -115,7 +115,7 @@ export class OnlineEvaluationConfig extends OnlineEvaluationConfigBase {
       stack,
     );
 
-    return OnlineEvaluationConfig.fromAttributes(scope, id, {
+    return OnlineEvaluation.fromAttributes(scope, id, {
       configArn,
       configId,
       configName: configId, // Use ID as name when importing by ID
@@ -123,22 +123,22 @@ export class OnlineEvaluationConfig extends OnlineEvaluationConfigBase {
   }
 
   /**
-   * Import an existing OnlineEvaluationConfig by its ARN.
+   * Import an existing OnlineEvaluation by its ARN.
    *
    * @param scope - The construct scope
    * @param id - Construct identifier
    * @param configArn - The configuration ARN to import
-   * @returns An IOnlineEvaluationConfig reference
+   * @returns An IOnlineEvaluation reference
    */
   public static fromConfigArn(
     scope: Construct,
     id: string,
     configArn: string,
-  ): IOnlineEvaluationConfig {
+  ): IOnlineEvaluation {
     const arnParts = Arn.split(configArn, ArnFormat.SLASH_RESOURCE_NAME);
     const configId = arnParts.resourceName!;
 
-    return OnlineEvaluationConfig.fromAttributes(scope, id, {
+    return OnlineEvaluation.fromAttributes(scope, id, {
       configArn,
       configId,
       configName: configId, // Use ID as name when importing by ARN
@@ -146,19 +146,19 @@ export class OnlineEvaluationConfig extends OnlineEvaluationConfigBase {
   }
 
   /**
-   * Import an existing OnlineEvaluationConfig from its attributes.
+   * Import an existing OnlineEvaluation from its attributes.
    *
    * @param scope - The construct scope
    * @param id - Construct identifier
    * @param attrs - The configuration attributes
-   * @returns An IOnlineEvaluationConfig reference
+   * @returns An IOnlineEvaluation reference
    */
   public static fromAttributes(
     scope: Construct,
     id: string,
-    attrs: OnlineEvaluationConfigAttributes,
-  ): IOnlineEvaluationConfig {
-    class Import extends OnlineEvaluationConfigBase {
+    attrs: OnlineEvaluationAttributes,
+  ): IOnlineEvaluation {
+    class Import extends OnlineEvaluationBase {
       public readonly configArn = attrs.configArn;
       public readonly configId = attrs.configId;
       public readonly configName = attrs.configName;
@@ -226,7 +226,7 @@ export class OnlineEvaluationConfig extends OnlineEvaluationConfigBase {
   // CONSTRUCTOR
   // ------------------------------------------------------
 
-  constructor(scope: Construct, id: string, props: OnlineEvaluationConfigProps) {
+  constructor(scope: Construct, id: string, props: OnlineEvaluationProps) {
     super(scope, id);
 
     // Enhanced CDK Analytics Telemetry
@@ -259,7 +259,7 @@ export class OnlineEvaluationConfig extends OnlineEvaluationConfigBase {
     // AwsCustomResource for API calls
     // ------------------------------------------------------
     const customResource = new cr.AwsCustomResource(this, 'Resource', {
-      resourceType: 'Custom::BedrockAgentCoreOnlineEvaluationConfig',
+      resourceType: 'Custom::BedrockAgentCoreOnlineEvaluation',
       installLatestAwsSdk: true, // Required for new bedrock-agentcore-control APIs
       onCreate: {
         service: 'bedrock-agentcore-control',
@@ -432,9 +432,9 @@ export class OnlineEvaluationConfig extends OnlineEvaluationConfigBase {
   }
 
   /**
-   * Builds the parameters for CreateOnlineEvaluationConfig API call.
+   * Builds the parameters for CreateOnlineEvaluation API call.
    */
-  private _buildCreateParams(props: OnlineEvaluationConfigProps): any {
+  private _buildCreateParams(props: OnlineEvaluationProps): any {
     const params: any = {
       onlineEvaluationConfigName: props.configName,
       evaluators: props.evaluators.map((e) => e._render()),
@@ -454,9 +454,9 @@ export class OnlineEvaluationConfig extends OnlineEvaluationConfigBase {
   }
 
   /**
-   * Builds the parameters for UpdateOnlineEvaluationConfig API call.
+   * Builds the parameters for UpdateOnlineEvaluation API call.
    */
-  private _buildUpdateParams(props: OnlineEvaluationConfigProps): any {
+  private _buildUpdateParams(props: OnlineEvaluationProps): any {
     return {
       onlineEvaluationConfigId: new cr.PhysicalResourceIdReference(),
       evaluators: props.evaluators.map((e) => e._render()),
@@ -472,7 +472,7 @@ export class OnlineEvaluationConfig extends OnlineEvaluationConfigBase {
   /**
    * Builds the rule configuration for the evaluation.
    */
-  private _buildRuleConfig(props: OnlineEvaluationConfigProps): any {
+  private _buildRuleConfig(props: OnlineEvaluationProps): any {
     const rule: any = {};
 
     // Sampling configuration
