@@ -118,7 +118,8 @@
   },
   "awslint": {
     "exclude": [
-      "props-physical-name:@aws-cdk/aws-bedrock-agentcore-alpha.RuntimeEndpointProps"
+      "props-physical-name:@aws-cdk/aws-bedrock-agentcore-alpha.RuntimeEndpointProps",
+      "props-physical-name:@aws-cdk/aws-bedrock-agentcore-alpha.OnlineEvaluationConfigProps"
     ]
   },
   "jsiiRosetta": {

@@ -58,3 +58,13 @@ export * from './gateway/targets/target-configuration';
 export * from './gateway/targets/schema/base-schema';
 export * from './gateway/targets/schema/api-schema';
 export * from './gateway/targets/schema/tool-schema';
+
+// ===================================
+// Evaluation
+// ===================================
+export * from './evaluation/types';
+export * from './evaluation/perms';
+export * from './evaluation/evaluator';
+export * from './evaluation/data-source';
+export * from './evaluation/online-evaluation-config-base';
+export * from './evaluation/online-evaluation-config';

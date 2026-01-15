@@ -1,0 +1,76 @@
+/**
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
+/**
+ * IAM permission constants for Online Evaluation configurations.
+ */
+export namespace EvaluationPerms {
+  /******************************************************************************
+   *                         Control Plane Permissions
+   *****************************************************************************/
+  /**
+   * Permissions to manage online evaluation configurations (CRUD)
+   */
+  export const ADMIN_PERMS = [
+    'bedrock-agentcore:CreateOnlineEvaluationConfig',
+    'bedrock-agentcore:GetOnlineEvaluationConfig',
+    'bedrock-agentcore:UpdateOnlineEvaluationConfig',
+    'bedrock-agentcore:DeleteOnlineEvaluationConfig',
+    'bedrock-agentcore:ListOnlineEvaluationConfigs',
+  ];
+
+  /**
+   * Permissions to read online evaluation configurations
+   */
+  export const READ_PERMS = [
+    'bedrock-agentcore:GetOnlineEvaluationConfig',
+    'bedrock-agentcore:ListOnlineEvaluationConfigs',
+  ];
+
+  /******************************************************************************
+   *                         Execution Role Permissions
+   *****************************************************************************/
+  /**
+   * Permissions required for the execution role to read CloudWatch Logs
+   */
+  export const CLOUDWATCH_LOGS_READ_PERMS = [
+    'logs:DescribeLogGroups',
+    'logs:GetQueryResults',
+    'logs:StartQuery',
+  ];
+
+  /**
+   * Permissions required for the execution role to invoke Bedrock models
+   */
+  export const BEDROCK_MODEL_PERMS = [
+    'bedrock:InvokeModel',
+    'bedrock:InvokeModelWithResponseStream',
+  ];
+
+  /**
+   * Permissions required for the execution role to write evaluation results
+   */
+  export const CLOUDWATCH_LOGS_WRITE_PERMS = [
+    'logs:CreateLogGroup',
+    'logs:CreateLogStream',
+    'logs:PutLogEvents',
+  ];
+
+  /**
+   * Permissions required for CloudWatch index policies (for Transaction Search)
+   */
+  export const CLOUDWATCH_INDEX_POLICY_PERMS = [
+    'logs:DescribeIndexPolicies',
+    'logs:PutIndexPolicy',
+  ];
+}
