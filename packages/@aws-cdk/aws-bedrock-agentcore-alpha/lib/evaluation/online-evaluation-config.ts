@@ -74,13 +74,13 @@ export interface OnlineEvaluationConfigProps extends OnlineEvaluationConfigBaseP
  *
  * @example
  * // Basic usage with built-in evaluators
- * const evaluation = new OnlineEvaluationConfig(this, 'MyEvaluation', {
+ * const evaluation = new agentcore.OnlineEvaluationConfig(this, 'MyEvaluation', {
  *   configName: 'my_evaluation',
  *   evaluators: [
- *     EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS),
- *     EvaluatorReference.builtin(BuiltinEvaluator.CORRECTNESS),
+ *     agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
+ *     agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.CORRECTNESS),
  *   ],
- *   dataSource: DataSourceConfig.fromCloudWatchLogs({
+ *   dataSource: agentcore.DataSourceConfig.fromCloudWatchLogs({
  *     logGroupNames: ['/aws/bedrock-agentcore/my-agent'],
  *     serviceNames: ['my-agent.default'],
  *   }),

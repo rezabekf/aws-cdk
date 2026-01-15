@@ -136,15 +136,6 @@ describe('OnlineEvaluationConfig', () => {
       expect(evaluator._render()).toEqual({ evaluatorId: 'Builtin.Helpfulness' });
     });
 
-    test('creates custom evaluator reference', () => {
-      // WHEN
-      const evaluator = EvaluatorReference.custom('my-custom-evaluator');
-
-      // THEN
-      expect(evaluator.evaluatorId).toBe('my-custom-evaluator');
-      expect(evaluator._render()).toEqual({ evaluatorId: 'my-custom-evaluator' });
-    });
-
     test('supports all built-in evaluators', () => {
       // THEN
       expect(EvaluatorReference.builtin(BuiltinEvaluator.GOAL_SUCCESS_RATE).evaluatorId).toBe('Builtin.GoalSuccessRate');

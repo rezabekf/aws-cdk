@@ -38,14 +38,14 @@ export enum DataSourceType {
  *
  * @example
  * // CloudWatch Logs data source
- * const dataSource = DataSourceConfig.fromCloudWatchLogs({
+ * const dataSource = agentcore.DataSourceConfig.fromCloudWatchLogs({
  *   logGroupNames: ['/aws/bedrock-agentcore/my-agent'],
  *   serviceNames: ['my-agent.default'],
  * });
  *
  * @example
  * // Agent Endpoint data source
- * const dataSource = DataSourceConfig.fromAgentEndpoint({
+ * const dataSource = agentcore.DataSourceConfig.fromAgentEndpoint({
  *   agentRuntimeId: 'my-runtime-id',
  *   endpointName: 'my-endpoint',
  * });
@@ -60,7 +60,7 @@ export class DataSourceConfig {
    * @returns A DataSourceConfig instance
    *
    * @example
-   * const dataSource = DataSourceConfig.fromCloudWatchLogs({
+   * const dataSource = agentcore.DataSourceConfig.fromCloudWatchLogs({
    *   logGroupNames: ['/aws/bedrock-agentcore/my-agent'],
    *   serviceNames: ['my-agent.default'],
    * });
@@ -80,7 +80,7 @@ export class DataSourceConfig {
    * @returns A DataSourceConfig instance
    *
    * @example
-   * const dataSource = DataSourceConfig.fromAgentEndpoint({
+   * const dataSource = agentcore.DataSourceConfig.fromAgentEndpoint({
    *   agentRuntimeId: 'my-runtime-id',
    *   endpointName: 'my-endpoint',
    * });

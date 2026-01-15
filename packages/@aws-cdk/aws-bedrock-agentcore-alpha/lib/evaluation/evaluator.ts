@@ -14,20 +14,15 @@
 import { BuiltinEvaluator } from './types';
 
 /**
- * Represents a reference to an evaluator for online evaluation.
+ * Represents a reference to a built-in evaluator for online evaluation.
  *
- * Use the static factory methods to create evaluator references:
+ * Use the static factory method to create evaluator references:
  * - `EvaluatorReference.builtin()` for built-in evaluators
- * - `EvaluatorReference.custom()` for custom evaluators
  *
  * @example
  * // Using built-in evaluators
- * const helpfulness = EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS);
- * const correctness = EvaluatorReference.builtin(BuiltinEvaluator.CORRECTNESS);
- *
- * @example
- * // Using custom evaluators
- * const customEval = EvaluatorReference.custom('my-custom-evaluator-id');
+ * const helpfulness = agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS);
+ * const correctness = agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.CORRECTNESS);
  */
 export class EvaluatorReference {
   /**
@@ -40,27 +35,11 @@ export class EvaluatorReference {
    * @returns An EvaluatorReference instance
    *
    * @example
-   * const helpfulness = EvaluatorReference.builtin(BuiltinEvaluator.HELPFULNESS);
-   * const goalSuccess = EvaluatorReference.builtin(BuiltinEvaluator.GOAL_SUCCESS_RATE);
+   * const helpfulness = agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS);
+   * const goalSuccess = agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.GOAL_SUCCESS_RATE);
    */
   public static builtin(evaluator: BuiltinEvaluator): EvaluatorReference {
     return new EvaluatorReference(evaluator);
-  }
-
-  /**
-   * Creates a reference to a custom evaluator.
-   *
-   * Custom evaluators allow you to define your own evaluation logic
-   * for assessing agent performance based on your specific requirements.
-   *
-   * @param evaluatorId - The unique identifier of the custom evaluator
-   * @returns An EvaluatorReference instance
-   *
-   * @example
-   * const customEval = EvaluatorReference.custom('my-custom-evaluator-id');
-   */
-  public static custom(evaluatorId: string): EvaluatorReference {
-    return new EvaluatorReference(evaluatorId);
   }
 
   /**
