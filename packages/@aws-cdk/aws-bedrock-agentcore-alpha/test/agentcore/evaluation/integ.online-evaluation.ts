@@ -31,7 +31,7 @@ new agentcore.OnlineEvaluation(stack, 'BasicEvaluation', {
     logGroupNames: [logGroup.logGroupName],
     serviceNames: ['integ-test-agent.default'],
   }),
-  description: 'Basic integration test evaluation',
+  description: 'Basic integration test evaluation with CloudWatch Logs',
 });
 
 new integ.IntegTest(app, 'BedrockAgentCoreOnlineEvaluation', {

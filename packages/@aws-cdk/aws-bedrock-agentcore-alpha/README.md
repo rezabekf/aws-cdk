@@ -2258,17 +2258,17 @@ Amazon Bedrock AgentCore provides 13 built-in evaluators that assess different a
 - `CORRECTNESS` - Whether the information is factually accurate
 - `FAITHFULNESS` - Whether the response is faithful to the provided context
 - `HARMFULNESS` - Whether the response contains harmful content
-- `MALICIOUSNESS` - Whether the response contains malicious content
-- `TOXICITY` - Whether the response contains toxic content
+- `STEREOTYPING` - Detects content that makes generalizations about individuals or groups
 - `REFUSAL` - Whether the agent appropriately refuses harmful requests
 - `COHERENCE` - Whether the response is logically coherent
-- `COMPLETENESS` - Whether the response fully addresses the user's request
+- `RESPONSE_RELEVANCE` - Whether the response appropriately addresses the user's query
 - `CONCISENESS` - Whether the response is appropriately concise
+- `INSTRUCTION_FOLLOWING` - How well the agent follows system instructions
 
 **Tool Call-Level Evaluators:**
 
-- `TOOL_SELECTION` - Whether the agent selected the appropriate tool
-- `TOOL_CALL_QUALITY` - The quality of tool call parameters and execution
+- `TOOL_SELECTION_ACCURACY` - Whether the agent selected the appropriate tool
+- `TOOL_PARAMETER_ACCURACY` - How accurately the agent extracts parameters from user queries
 
 ```typescript fixture=default
 const evaluation = new agentcore.OnlineEvaluation(this, 'ComprehensiveEval', {
@@ -2282,9 +2282,9 @@ const evaluation = new agentcore.OnlineEvaluation(this, 'ComprehensiveEval', {
     agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.COHERENCE),
     // Trace level - safety
     agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HARMFULNESS),
-    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.TOXICITY),
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.STEREOTYPING),
     // Tool call level
-    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.TOOL_SELECTION),
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.TOOL_SELECTION_ACCURACY),
   ],
   dataSource: agentcore.DataSourceConfig.fromCloudWatchLogs({
     logGroupNames: ['/aws/bedrock-agentcore/my-agent'],
@@ -2297,7 +2297,58 @@ const evaluation = new agentcore.OnlineEvaluation(this, 'ComprehensiveEval', {
 
 Online evaluation supports two types of data sources:
 
+**AgentCore Runtime Data Source (Recommended):**
+
+For runtimes created within your CDK app, use `fromAgentRuntimeEndpoint()` which automatically derives the CloudWatch log group and service name:
+
+```typescript fixture=default
+const repository = new ecr.Repository(this, 'TestRepository', {
+  repositoryName: 'test-agent-runtime',
+});
+
+const runtime = new agentcore.Runtime(this, 'MyRuntime', {
+  runtimeName: 'my_agent',
+  agentRuntimeArtifact: agentcore.AgentRuntimeArtifact.fromEcrRepository(repository, 'v1.0.0'),
+});
+
+// Using default endpoint (simplest)
+const evaluation = new agentcore.OnlineEvaluation(this, 'RuntimeEval', {
+  configName: 'runtime_evaluation',
+  evaluators: [
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime),
+});
+```
+
+You can also specify a specific endpoint:
+
+```typescript fixture=default
+declare const runtime: agentcore.Runtime;
+
+// Using a specific endpoint construct
+const prodEndpoint = runtime.addEndpoint('PROD');
+const evaluation = new agentcore.OnlineEvaluation(this, 'ProdEval', {
+  configName: 'prod_evaluation',
+  evaluators: [
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.CORRECTNESS),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime, prodEndpoint),
+});
+
+// Or using endpoint name as string
+const stagingEval = new agentcore.OnlineEvaluation(this, 'StagingEval', {
+  configName: 'staging_evaluation',
+  evaluators: [
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.CORRECTNESS),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime, 'STAGING'),
+});
+```
+
 **CloudWatch Logs Data Source:**
+
+For external agents or when you need to specify log groups directly:
 
 ```typescript fixture=default
 const evaluation = new agentcore.OnlineEvaluation(this, 'CloudWatchEval', {
@@ -2311,23 +2362,6 @@ const evaluation = new agentcore.OnlineEvaluation(this, 'CloudWatchEval', {
       '/aws/bedrock-agentcore/agent2',
     ],
     serviceNames: ['agent1.default', 'agent2.production'],
-  }),
-});
-```
-
-**Agent Endpoint Data Source:**
-
-```typescript fixture=default
-declare const runtime: agentcore.Runtime;
-
-const evaluation = new agentcore.OnlineEvaluation(this, 'EndpointEval', {
-  configName: 'endpoint_evaluation',
-  evaluators: [
-    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.CORRECTNESS),
-  ],
-  dataSource: agentcore.DataSourceConfig.fromAgentEndpoint({
-    agentRuntimeId: runtime.agentRuntimeId,
-    endpointName: 'production',
   }),
 });
 ```

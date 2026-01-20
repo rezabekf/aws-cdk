@@ -248,7 +248,7 @@
          "Arn"
         ]
        },
-       "\",\"enableOnCreate\":true,\"description\":\"Basic integration test evaluation\",\"rule\":{\"samplingConfig\":{\"samplingPercentage\":10},\"sessionConfig\":{\"sessionTimeoutMinutes\":15}}},\"physicalResourceId\":{\"responsePath\":\"onlineEvaluationConfigId\"}}"
+       "\",\"enableOnCreate\":true,\"description\":\"Basic integration test evaluation with CloudWatch Logs\",\"rule\":{\"samplingConfig\":{\"samplingPercentage\":10},\"sessionConfig\":{\"sessionTimeoutMinutes\":15}}},\"physicalResourceId\":{\"responsePath\":\"onlineEvaluationConfigId\"}}"
       ]
      ]
     },
@@ -267,7 +267,7 @@
          "Arn"
         ]
        },
-       "\",\"description\":\"Basic integration test evaluation\",\"rule\":{\"samplingConfig\":{\"samplingPercentage\":10},\"sessionConfig\":{\"sessionTimeoutMinutes\":15}},\"executionStatus\":\"ENABLED\"},\"physicalResourceId\":{\"responsePath\":\"onlineEvaluationConfigId\"}}"
+       "\",\"description\":\"Basic integration test evaluation with CloudWatch Logs\",\"rule\":{\"samplingConfig\":{\"samplingPercentage\":10},\"sessionConfig\":{\"sessionTimeoutMinutes\":15}},\"executionStatus\":\"ENABLED\"},\"physicalResourceId\":{\"responsePath\":\"onlineEvaluationConfigId\"}}"
       ]
      ]
     },

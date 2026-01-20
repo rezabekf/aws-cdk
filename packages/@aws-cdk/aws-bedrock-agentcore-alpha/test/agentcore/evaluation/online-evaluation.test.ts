@@ -20,6 +20,8 @@ import {
   DataSourceConfig,
   BuiltinEvaluator,
   FilterOperator,
+  Runtime,
+  AgentRuntimeArtifact,
 } from '../../../lib';
 
 describe('OnlineEvaluation', () => {
@@ -67,15 +69,19 @@ describe('OnlineEvaluation', () => {
       });
     });
 
-    test('creates OnlineEvaluation with Agent Endpoint data source', () => {
+    test('creates OnlineEvaluation with AgentCore Runtime endpoint data source', () => {
+      // GIVEN
+      const runtime = new Runtime(stack, 'TestRuntime', {
+        runtimeName: 'test_runtime',
+        agentRuntimeArtifact: AgentRuntimeArtifact.fromImageUri('123456789012.dkr.ecr.us-east-1.amazonaws.com/my-agent:latest'),
+      });
+      const endpoint = runtime.addEndpoint('DEFAULT');
+
       // WHEN
       new OnlineEvaluation(stack, 'TestEvaluation', {
         configName: 'test_evaluation',
         evaluators: [EvaluatorReference.builtin(BuiltinEvaluator.CORRECTNESS)],
-        dataSource: DataSourceConfig.fromAgentEndpoint({
-          agentRuntimeId: 'my-runtime-id',
-          endpointName: 'my-endpoint',
-        }),
+        dataSource: DataSourceConfig.fromAgentRuntimeEndpoint(runtime, endpoint),
       });
 
       // THEN
@@ -143,14 +149,14 @@ describe('OnlineEvaluation', () => {
       expect(EvaluatorReference.builtin(BuiltinEvaluator.CORRECTNESS).evaluatorId).toBe('Builtin.Correctness');
       expect(EvaluatorReference.builtin(BuiltinEvaluator.FAITHFULNESS).evaluatorId).toBe('Builtin.Faithfulness');
       expect(EvaluatorReference.builtin(BuiltinEvaluator.HARMFULNESS).evaluatorId).toBe('Builtin.Harmfulness');
-      expect(EvaluatorReference.builtin(BuiltinEvaluator.MALICIOUSNESS).evaluatorId).toBe('Builtin.Maliciousness');
-      expect(EvaluatorReference.builtin(BuiltinEvaluator.TOXICITY).evaluatorId).toBe('Builtin.Toxicity');
+      expect(EvaluatorReference.builtin(BuiltinEvaluator.STEREOTYPING).evaluatorId).toBe('Builtin.Stereotyping');
       expect(EvaluatorReference.builtin(BuiltinEvaluator.REFUSAL).evaluatorId).toBe('Builtin.Refusal');
-      expect(EvaluatorReference.builtin(BuiltinEvaluator.TOOL_SELECTION).evaluatorId).toBe('Builtin.ToolSelection');
-      expect(EvaluatorReference.builtin(BuiltinEvaluator.TOOL_CALL_QUALITY).evaluatorId).toBe('Builtin.ToolCallQuality');
+      expect(EvaluatorReference.builtin(BuiltinEvaluator.TOOL_SELECTION_ACCURACY).evaluatorId).toBe('Builtin.ToolSelectionAccuracy');
+      expect(EvaluatorReference.builtin(BuiltinEvaluator.TOOL_PARAMETER_ACCURACY).evaluatorId).toBe('Builtin.ToolParameterAccuracy');
       expect(EvaluatorReference.builtin(BuiltinEvaluator.COHERENCE).evaluatorId).toBe('Builtin.Coherence');
-      expect(EvaluatorReference.builtin(BuiltinEvaluator.COMPLETENESS).evaluatorId).toBe('Builtin.Completeness');
+      expect(EvaluatorReference.builtin(BuiltinEvaluator.RESPONSE_RELEVANCE).evaluatorId).toBe('Builtin.ResponseRelevance');
       expect(EvaluatorReference.builtin(BuiltinEvaluator.CONCISENESS).evaluatorId).toBe('Builtin.Conciseness');
+      expect(EvaluatorReference.builtin(BuiltinEvaluator.INSTRUCTION_FOLLOWING).evaluatorId).toBe('Builtin.InstructionFollowing');
     });
   });
 
@@ -171,35 +177,72 @@ describe('OnlineEvaluation', () => {
       });
     });
 
-    test('creates Agent Endpoint data source with default endpoint name', () => {
-      // WHEN
-      const dataSource = DataSourceConfig.fromAgentEndpoint({
-        agentRuntimeId: 'my-runtime-id',
+    test('creates AgentCore Runtime endpoint data source', () => {
+      // GIVEN
+      const runtime = new Runtime(stack, 'TestRuntime', {
+        runtimeName: 'my_runtime',
+        agentRuntimeArtifact: AgentRuntimeArtifact.fromImageUri('123456789012.dkr.ecr.us-east-1.amazonaws.com/my-agent:latest'),
       });
+      const endpoint = runtime.addEndpoint('PROD');
+
+      // WHEN
+      const dataSource = DataSourceConfig.fromAgentRuntimeEndpoint(runtime, endpoint);
 
       // THEN
-      expect(dataSource._render()).toEqual({
-        agentEndpoint: {
-          agentRuntimeId: 'my-runtime-id',
-          endpointName: 'DEFAULT',
-        },
-      });
+      const rendered = dataSource._render();
+      expect(rendered.cloudWatchLogs).toBeDefined();
+      expect(rendered.cloudWatchLogs.logGroupNames).toHaveLength(1);
+      expect(rendered.cloudWatchLogs.logGroupNames[0]).toContain('/aws/bedrock-agentcore/runtimes/');
+      expect(rendered.cloudWatchLogs.logGroupNames[0]).toContain('-PROD');
+      expect(rendered.cloudWatchLogs.serviceNames).toEqual(['my_runtime.PROD']);
     });
 
-    test('creates Agent Endpoint data source with custom endpoint name', () => {
-      // WHEN
-      const dataSource = DataSourceConfig.fromAgentEndpoint({
-        agentRuntimeId: 'my-runtime-id',
-        endpointName: 'custom-endpoint',
+    test('creates AgentCore Runtime endpoint data source with DEFAULT endpoint', () => {
+      // GIVEN
+      const runtime = new Runtime(stack, 'TestRuntime', {
+        runtimeName: 'test_agent',
+        agentRuntimeArtifact: AgentRuntimeArtifact.fromImageUri('123456789012.dkr.ecr.us-east-1.amazonaws.com/my-agent:latest'),
       });
+      const endpoint = runtime.addEndpoint('DEFAULT');
+
+      // WHEN
+      const dataSource = DataSourceConfig.fromAgentRuntimeEndpoint(runtime, endpoint);
 
       // THEN
-      expect(dataSource._render()).toEqual({
-        agentEndpoint: {
-          agentRuntimeId: 'my-runtime-id',
-          endpointName: 'custom-endpoint',
-        },
+      const rendered = dataSource._render();
+      expect(rendered.cloudWatchLogs.serviceNames).toEqual(['test_agent.DEFAULT']);
+    });
+
+    test('creates AgentCore Runtime endpoint data source with default endpoint when not specified', () => {
+      // GIVEN
+      const runtime = new Runtime(stack, 'TestRuntime', {
+        runtimeName: 'test_agent',
+        agentRuntimeArtifact: AgentRuntimeArtifact.fromImageUri('123456789012.dkr.ecr.us-east-1.amazonaws.com/my-agent:latest'),
       });
+
+      // WHEN - no endpoint passed, should default to 'DEFAULT'
+      const dataSource = DataSourceConfig.fromAgentRuntimeEndpoint(runtime);
+
+      // THEN
+      const rendered = dataSource._render();
+      expect(rendered.cloudWatchLogs.serviceNames).toEqual(['test_agent.DEFAULT']);
+      expect(rendered.cloudWatchLogs.logGroupNames[0]).toContain('-DEFAULT');
+    });
+
+    test('creates AgentCore Runtime endpoint data source with endpoint name as string', () => {
+      // GIVEN
+      const runtime = new Runtime(stack, 'TestRuntime', {
+        runtimeName: 'test_agent',
+        agentRuntimeArtifact: AgentRuntimeArtifact.fromImageUri('123456789012.dkr.ecr.us-east-1.amazonaws.com/my-agent:latest'),
+      });
+
+      // WHEN - endpoint name passed as string
+      const dataSource = DataSourceConfig.fromAgentRuntimeEndpoint(runtime, 'PROD');
+
+      // THEN
+      const rendered = dataSource._render();
+      expect(rendered.cloudWatchLogs.serviceNames).toEqual(['test_agent.PROD']);
+      expect(rendered.cloudWatchLogs.logGroupNames[0]).toContain('-PROD');
     });
   });
 

@@ -11,111 +11,119 @@
  *  and limitations under the License.
  */
 
-import { UnscopedValidationError } from 'aws-cdk-lib/core/lib/errors';
-import { CloudWatchLogsDataSourceConfig, AgentEndpointDataSourceConfig } from './types';
-
-/**
- * The type of data source for online evaluation.
- */
-export enum DataSourceType {
-  /**
-   * CloudWatch Logs data source.
-   */
-  CLOUDWATCH_LOGS = 'CLOUDWATCH_LOGS',
-
-  /**
-   * Agent Endpoint data source.
-   */
-  AGENT_ENDPOINT = 'AGENT_ENDPOINT',
-}
+import { CloudWatchLogsDataSourceConfig } from './types';
+import { IBedrockAgentRuntime } from '../runtime/runtime-base';
+import { IRuntimeEndpoint } from '../runtime/runtime-endpoint-base';
 
 /**
  * Configuration for the data source used in online evaluation.
  *
  * Use the static factory methods to create data source configurations:
- * - `DataSourceConfig.fromCloudWatchLogs()` for CloudWatch Logs data source
- * - `DataSourceConfig.fromAgentEndpoint()` for Agent Endpoint data source
+ * - `DataSourceConfig.fromAgentRuntimeEndpoint()` for AgentCore Runtime (recommended)
+ * - `DataSourceConfig.fromCloudWatchLogs()` for external agents or custom log groups
  *
  * @example
- * // CloudWatch Logs data source
+ * // AgentCore Runtime with default endpoint
+ * const runtime = new agentcore.Runtime(this, 'Runtime', { ... });
+ * const dataSource = agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime);
+ *
+ * @example
+ * // AgentCore Runtime with specific endpoint
+ * const runtime = new agentcore.Runtime(this, 'Runtime', { ... });
+ * const endpoint = runtime.addEndpoint('PROD');
+ * const dataSource = agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime, endpoint);
+ *
+ * @example
+ * // CloudWatch Logs data source (for external agents)
  * const dataSource = agentcore.DataSourceConfig.fromCloudWatchLogs({
- *   logGroupNames: ['/aws/bedrock-agentcore/my-agent'],
- *   serviceNames: ['my-agent.default'],
- * });
- *
- * @example
- * // Agent Endpoint data source
- * const dataSource = agentcore.DataSourceConfig.fromAgentEndpoint({
- *   agentRuntimeId: 'my-runtime-id',
- *   endpointName: 'my-endpoint',
+ *   logGroupNames: ['/aws/my-external-agent/logs'],
+ *   serviceNames: ['my-external-agent'],
  * });
  */
 export class DataSourceConfig {
   /**
    * Creates a CloudWatch Logs data source configuration.
    *
-   * Use this when your agent traces are stored in CloudWatch Logs.
+   * Use this when your agent traces are stored in CloudWatch Logs,
+   * such as for external agents or when you need to specify log groups directly.
    *
    * @param config - The CloudWatch Logs data source configuration
    * @returns A DataSourceConfig instance
    *
    * @example
    * const dataSource = agentcore.DataSourceConfig.fromCloudWatchLogs({
-   *   logGroupNames: ['/aws/bedrock-agentcore/my-agent'],
-   *   serviceNames: ['my-agent.default'],
+   *   logGroupNames: ['/aws/bedrock-agentcore/runtimes/myRuntime-abc123-DEFAULT'],
+   *   serviceNames: ['myRuntime.DEFAULT'],
    * });
    */
   public static fromCloudWatchLogs(config: CloudWatchLogsDataSourceConfig): DataSourceConfig {
-    return new DataSourceConfig(DataSourceType.CLOUDWATCH_LOGS, {
-      cloudWatchLogs: config,
+    return new DataSourceConfig({
+      logGroupNames: config.logGroupNames,
+      serviceNames: config.serviceNames,
     });
   }
 
   /**
-   * Creates an Agent Endpoint data source configuration.
+   * Creates a data source configuration from an AgentCore Runtime and optional endpoint.
    *
-   * Use this when you want to evaluate traces from a specific AgentCore Runtime endpoint.
+   * This is the recommended way to configure evaluation for AgentCore Runtime agents.
+   * It automatically derives the CloudWatch log group and service name from the runtime and endpoint.
    *
-   * @param config - The Agent Endpoint data source configuration
+   * @param runtime - The AgentCore Runtime construct
+   * @param endpoint - The RuntimeEndpoint construct, or endpoint name string. Defaults to 'DEFAULT' if not provided.
    * @returns A DataSourceConfig instance
    *
    * @example
-   * const dataSource = agentcore.DataSourceConfig.fromAgentEndpoint({
-   *   agentRuntimeId: 'my-runtime-id',
-   *   endpointName: 'my-endpoint',
+   * // Using default endpoint
+   * const runtime = new agentcore.Runtime(this, 'Runtime', {
+   *   runtimeName: 'my_agent',
+   *   agentRuntimeArtifact: ...,
    * });
+   * const dataSource = agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime);
+   *
+   * @example
+   * // Using a specific endpoint
+   * const runtime = new agentcore.Runtime(this, 'Runtime', { ... });
+   * const endpoint = runtime.addEndpoint('PROD');
+   * const dataSource = agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime, endpoint);
+   *
+   * @example
+   * // Using endpoint name as string
+   * declare const runtime: agentcore.Runtime;
+   * const dataSource = agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime, 'PROD');
    */
-  public static fromAgentEndpoint(config: AgentEndpointDataSourceConfig): DataSourceConfig {
-    return new DataSourceConfig(DataSourceType.AGENT_ENDPOINT, {
-      agentEndpoint: config,
+  public static fromAgentRuntimeEndpoint(
+    runtime: IBedrockAgentRuntime,
+    endpoint?: IRuntimeEndpoint | string,
+  ): DataSourceConfig {
+    // Determine endpoint name - default to 'DEFAULT' if not provided
+    let endpointName: string;
+    if (endpoint === undefined) {
+      endpointName = 'DEFAULT';
+    } else if (typeof endpoint === 'string') {
+      endpointName = endpoint;
+    } else {
+      endpointName = endpoint.endpointName;
+    }
+
+    // Log group follows pattern: /aws/bedrock-agentcore/runtimes/{runtimeId}-{endpointName}
+    const logGroupName = `/aws/bedrock-agentcore/runtimes/${runtime.agentRuntimeId}-${endpointName}`;
+    // Service name follows pattern: {runtimeName}.{endpointName}
+    const serviceName = `${runtime.agentRuntimeName}.${endpointName}`;
+
+    return new DataSourceConfig({
+      logGroupNames: [logGroupName],
+      serviceNames: [serviceName],
     });
   }
 
   /**
-   * The type of data source.
+   * The CloudWatch Logs configuration.
    */
-  public readonly type: DataSourceType;
+  public readonly cloudWatchLogsConfig: CloudWatchLogsDataSourceConfig;
 
-  /**
-   * The CloudWatch Logs configuration (if applicable).
-   */
-  public readonly cloudWatchLogsConfig?: CloudWatchLogsDataSourceConfig;
-
-  /**
-   * The Agent Endpoint configuration (if applicable).
-   */
-  public readonly agentEndpointConfig?: AgentEndpointDataSourceConfig;
-
-  private constructor(
-    type: DataSourceType,
-    config: {
-      cloudWatchLogs?: CloudWatchLogsDataSourceConfig;
-      agentEndpoint?: AgentEndpointDataSourceConfig;
-    },
-  ) {
-    this.type = type;
-    this.cloudWatchLogsConfig = config.cloudWatchLogs;
-    this.agentEndpointConfig = config.agentEndpoint;
+  private constructor(config: CloudWatchLogsDataSourceConfig) {
+    this.cloudWatchLogsConfig = config;
   }
 
   /**
@@ -123,32 +131,19 @@ export class DataSourceConfig {
    * @internal
    */
   public _render(): any {
-    if (this.type === DataSourceType.CLOUDWATCH_LOGS && this.cloudWatchLogsConfig) {
-      return {
-        cloudWatchLogs: {
-          logGroupNames: this.cloudWatchLogsConfig.logGroupNames,
-          serviceNames: this.cloudWatchLogsConfig.serviceNames,
-        },
-      };
-    }
-
-    if (this.type === DataSourceType.AGENT_ENDPOINT && this.agentEndpointConfig) {
-      return {
-        agentEndpoint: {
-          agentRuntimeId: this.agentEndpointConfig.agentRuntimeId,
-          endpointName: this.agentEndpointConfig.endpointName ?? 'DEFAULT',
-        },
-      };
-    }
-
-    throw new UnscopedValidationError(`Unknown data source type: ${this.type}`);
+    return {
+      cloudWatchLogs: {
+        logGroupNames: this.cloudWatchLogsConfig.logGroupNames,
+        serviceNames: this.cloudWatchLogsConfig.serviceNames,
+      },
+    };
   }
 
   /**
-   * Returns the log group names if this is a CloudWatch Logs data source.
+   * Returns the log group names for this data source.
    * @internal
    */
-  public _getLogGroupNames(): string[] | undefined {
-    return this.cloudWatchLogsConfig?.logGroupNames;
+  public _getLogGroupNames(): string[] {
+    return this.cloudWatchLogsConfig.logGroupNames;
   }
 }

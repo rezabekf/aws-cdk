@@ -20,17 +20,9 @@ import * as iam from 'aws-cdk-lib/aws-iam';
  * at various levels (session, trace, or tool call).
  */
 export enum BuiltinEvaluator {
-  /**
-   * Evaluates whether the conversation successfully meets the user's goals.
-   * Level: SESSION
-   */
-  GOAL_SUCCESS_RATE = 'Builtin.GoalSuccessRate',
-
-  /**
-   * Evaluates how useful and valuable the agent's response is from the user's perspective.
-   * Level: TRACE
-   */
-  HELPFULNESS = 'Builtin.Helpfulness',
+  // ============================================
+  // Response Quality Metrics (Level: TRACE)
+  // ============================================
 
   /**
    * Evaluates whether the information in the agent's response is factually accurate.
@@ -39,64 +31,88 @@ export enum BuiltinEvaluator {
   CORRECTNESS = 'Builtin.Correctness',
 
   /**
-   * Evaluates whether the agent's response is faithful to the provided context.
+   * Evaluates whether information in the response is supported by provided context/sources.
    * Level: TRACE
    */
   FAITHFULNESS = 'Builtin.Faithfulness',
 
   /**
-   * Evaluates whether the agent's response contains harmful content.
+   * Evaluates from user's perspective how useful and valuable the agent's response is.
    * Level: TRACE
    */
-  HARMFULNESS = 'Builtin.Harmfulness',
+  HELPFULNESS = 'Builtin.Helpfulness',
 
   /**
-   * Evaluates whether the agent's response contains malicious content.
+   * Evaluates whether the response appropriately addresses the user's query.
    * Level: TRACE
    */
-  MALICIOUSNESS = 'Builtin.Maliciousness',
+  RESPONSE_RELEVANCE = 'Builtin.ResponseRelevance',
 
   /**
-   * Evaluates whether the agent's response contains toxic content.
+   * Evaluates whether the response is appropriately brief without missing key information.
    * Level: TRACE
    */
-  TOXICITY = 'Builtin.Toxicity',
+  CONCISENESS = 'Builtin.Conciseness',
 
   /**
-   * Evaluates whether the agent appropriately refuses harmful requests.
-   * Level: TRACE
-   */
-  REFUSAL = 'Builtin.Refusal',
-
-  /**
-   * Evaluates whether the agent selected the appropriate tool for the task.
-   * Level: TOOL_CALL
-   */
-  TOOL_SELECTION = 'Builtin.ToolSelection',
-
-  /**
-   * Evaluates the quality of tool call parameters and execution.
-   * Level: TOOL_CALL
-   */
-  TOOL_CALL_QUALITY = 'Builtin.ToolCallQuality',
-
-  /**
-   * Evaluates whether the agent's response is logically coherent.
+   * Evaluates whether the response is logically structured and coherent.
    * Level: TRACE
    */
   COHERENCE = 'Builtin.Coherence',
 
   /**
-   * Evaluates whether the agent's response fully addresses the user's request.
+   * Measures how well the agent follows the provided system instructions.
    * Level: TRACE
    */
-  COMPLETENESS = 'Builtin.Completeness',
+  INSTRUCTION_FOLLOWING = 'Builtin.InstructionFollowing',
 
   /**
-   * Evaluates whether the agent's response is appropriately concise.
+   * Detects when agent evades questions or directly refuses to answer.
    * Level: TRACE
    */
-  CONCISENESS = 'Builtin.Conciseness',
+  REFUSAL = 'Builtin.Refusal',
+
+  // ============================================
+  // Task Completion Metrics (Level: SESSION)
+  // ============================================
+
+  /**
+   * Evaluates whether the conversation successfully meets the user's goals.
+   * Level: SESSION
+   */
+  GOAL_SUCCESS_RATE = 'Builtin.GoalSuccessRate',
+
+  // ============================================
+  // Component Level Metrics (Level: TOOL_CALL)
+  // ============================================
+
+  /**
+   * Evaluates whether the agent selected the appropriate tool for the task.
+   * Level: TOOL_CALL
+   */
+  TOOL_SELECTION_ACCURACY = 'Builtin.ToolSelectionAccuracy',
+
+  /**
+   * Evaluates how accurately the agent extracts parameters from user queries.
+   * Level: TOOL_CALL
+   */
+  TOOL_PARAMETER_ACCURACY = 'Builtin.ToolParameterAccuracy',
+
+  // ============================================
+  // Safety Metrics (Level: TRACE)
+  // ============================================
+
+  /**
+   * Evaluates whether the response contains harmful content.
+   * Level: TRACE
+   */
+  HARMFULNESS = 'Builtin.Harmfulness',
+
+  /**
+   * Detects content that makes generalizations about individuals or groups.
+   * Level: TRACE
+   */
+  STEREOTYPING = 'Builtin.Stereotyping',
 }
 
 /**
@@ -206,23 +222,6 @@ export interface CloudWatchLogsDataSourceConfig {
    * `<agent-runtime-name>.<agent-runtime-endpoint-name>`
    */
   readonly serviceNames: string[];
-}
-
-/**
- * Configuration for Agent Endpoint data source.
- */
-export interface AgentEndpointDataSourceConfig {
-  /**
-   * The agent runtime ID.
-   */
-  readonly agentRuntimeId: string;
-
-  /**
-   * The endpoint name.
-   *
-   * @default 'DEFAULT'
-   */
-  readonly endpointName?: string;
 }
 
 /**
