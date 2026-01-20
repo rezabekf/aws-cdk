@@ -36,10 +36,6 @@ import {
   throwIfInvalid,
 } from './validation-helpers';
 
-/******************************************************************************
- *                              PROPS
- *****************************************************************************/
-
 /**
  * Properties for creating an OnlineEvaluation.
  */
@@ -59,10 +55,6 @@ export interface OnlineEvaluationProps extends OnlineEvaluationBaseProps {
    */
   readonly dataSource: DataSourceConfig;
 }
-
-/******************************************************************************
- *                                Class
- *****************************************************************************/
 
 /**
  * Online evaluation configuration for Amazon Bedrock AgentCore.
@@ -178,10 +170,6 @@ export class OnlineEvaluation extends OnlineEvaluationBase {
     return new Import(scope, id);
   }
 
-  // ------------------------------------------------------
-  // Attributes
-  // ------------------------------------------------------
-
   /**
    * The ARN of the online evaluation configuration.
    * @attribute
@@ -222,19 +210,11 @@ export class OnlineEvaluation extends OnlineEvaluationBase {
    */
   public readonly grantPrincipal: iam.IPrincipal;
 
-  // ------------------------------------------------------
-  // CONSTRUCTOR
-  // ------------------------------------------------------
-
   constructor(scope: Construct, id: string, props: OnlineEvaluationProps) {
     super(scope, id);
 
-    // Enhanced CDK Analytics Telemetry
     addConstructMetadata(this, props);
 
-    // ------------------------------------------------------
-    // Validations
-    // ------------------------------------------------------
     throwIfInvalid(validateConfigName, props.configName, this);
     throwIfInvalid(validateDescription, props.description, this);
     throwIfInvalid(validateEvaluators, props.evaluators, this);
@@ -242,25 +222,16 @@ export class OnlineEvaluation extends OnlineEvaluationBase {
     throwIfInvalid(validateFilters, props.filters, this);
     throwIfInvalid(validateSessionTimeout, props.sessionTimeoutMinutes, this);
 
-    // ------------------------------------------------------
-    // Set properties and defaults
-    // ------------------------------------------------------
     this.configName = props.configName;
-    this.executionRole = props.executionRole ?? this._createExecutionRole();
+    this.executionRole = props.executionRole ?? this.createExecutionRole();
     this.grantPrincipal = this.executionRole;
 
-    // ------------------------------------------------------
-    // Build API parameters
-    // ------------------------------------------------------
-    const createParams = this._buildCreateParams(props);
-    const updateParams = this._buildUpdateParams(props);
+    const createParams = this.buildCreateParams(props);
+    const updateParams = this.buildUpdateParams(props);
 
-    // ------------------------------------------------------
-    // AwsCustomResource for API calls
-    // ------------------------------------------------------
     const customResource = new cr.AwsCustomResource(this, 'Resource', {
       resourceType: 'Custom::BedrockAgentCoreOnlineEvaluation',
-      installLatestAwsSdk: true, // Required for new bedrock-agentcore-control APIs
+      installLatestAwsSdk: true,
       onCreate: {
         service: 'bedrock-agentcore-control',
         action: 'CreateOnlineEvaluationConfig',
@@ -289,7 +260,6 @@ export class OnlineEvaluation extends OnlineEvaluationBase {
           actions: ['iam:PassRole'],
           resources: [this.executionRole.roleArn],
         }),
-        // The API validates CloudWatch index policy access during creation
         new iam.PolicyStatement({
           actions: [
             'logs:DescribeIndexPolicies',
@@ -301,21 +271,11 @@ export class OnlineEvaluation extends OnlineEvaluationBase {
       ]),
     });
 
-    // ------------------------------------------------------
-    // Extract attributes from response
-    // ------------------------------------------------------
     this.configId = customResource.getResponseField('onlineEvaluationConfigId');
     this.configArn = customResource.getResponseField('onlineEvaluationConfigArn');
   }
 
-  // ------------------------------------------------------
-  // PRIVATE METHODS
-  // ------------------------------------------------------
-
-  /**
-   * Creates the execution role for the evaluation.
-   */
-  private _createExecutionRole(): iam.IRole {
+  private createExecutionRole(): iam.IRole {
     const stack = Stack.of(this);
 
     const role = new iam.Role(this, 'ExecutionRole', {
@@ -350,7 +310,6 @@ export class OnlineEvaluation extends OnlineEvaluationBase {
       description: 'Execution role for Bedrock AgentCore Online Evaluation',
     });
 
-    // Add CloudWatch Logs read permissions (required for reading agent traces)
     role.addToPolicy(
       new iam.PolicyStatement({
         sid: 'CloudWatchLogReadStatement',
@@ -359,7 +318,6 @@ export class OnlineEvaluation extends OnlineEvaluationBase {
       }),
     );
 
-    // Add CloudWatch Logs write permissions for evaluation results
     role.addToPolicy(
       new iam.PolicyStatement({
         sid: 'CloudWatchLogWriteStatement',
@@ -378,7 +336,6 @@ export class OnlineEvaluation extends OnlineEvaluationBase {
       }),
     );
 
-    // Add CloudWatch index policy permissions (for Transaction Search)
     role.addToPolicy(
       new iam.PolicyStatement({
         sid: 'CloudWatchIndexPolicyStatement',
@@ -406,15 +363,12 @@ export class OnlineEvaluation extends OnlineEvaluationBase {
       }),
     );
 
-    // Add Bedrock model invocation permissions
     role.addToPolicy(
       new iam.PolicyStatement({
         sid: 'BedrockInvokeStatement',
         actions: EvaluationPerms.BEDROCK_MODEL_PERMS,
         resources: [
-          // foundation-model with wildcard region and empty account
           `arn:${Aws.PARTITION}:bedrock:*::foundation-model/*`,
-          // inference-profile with current account
           Arn.format(
             {
               service: 'bedrock',
@@ -431,77 +385,59 @@ export class OnlineEvaluation extends OnlineEvaluationBase {
     return role;
   }
 
-  /**
-   * Builds the parameters for CreateOnlineEvaluation API call.
-   */
-  private _buildCreateParams(props: OnlineEvaluationProps): any {
+  private buildCreateParams(props: OnlineEvaluationProps): any {
     const params: any = {
       onlineEvaluationConfigName: props.configName,
       evaluators: props.evaluators.map((e) => e._render()),
       dataSourceConfig: props.dataSource._render(),
       evaluationExecutionRoleArn: this.executionRole!.roleArn,
-      enableOnCreate: props.enableOnCreate !== false, // Default to true
+      enableOnCreate: props.enableOnCreate !== false,
     };
 
     if (props.description) {
       params.description = props.description;
     }
 
-    // Build rule configuration
-    params.rule = this._buildRuleConfig(props);
+    params.rule = this.buildRuleConfig(props);
 
     return params;
   }
 
-  /**
-   * Builds the parameters for UpdateOnlineEvaluation API call.
-   */
-  private _buildUpdateParams(props: OnlineEvaluationProps): any {
+  private buildUpdateParams(props: OnlineEvaluationProps): any {
     return {
       onlineEvaluationConfigId: new cr.PhysicalResourceIdReference(),
       evaluators: props.evaluators.map((e) => e._render()),
       dataSourceConfig: props.dataSource._render(),
       evaluationExecutionRoleArn: this.executionRole!.roleArn,
       description: props.description,
-      rule: this._buildRuleConfig(props),
+      rule: this.buildRuleConfig(props),
       executionStatus:
         props.enableOnCreate === false ? ExecutionStatus.DISABLED : ExecutionStatus.ENABLED,
     };
   }
 
-  /**
-   * Builds the rule configuration for the evaluation.
-   */
-  private _buildRuleConfig(props: OnlineEvaluationProps): any {
-    const rule: any = {};
-
-    // Sampling configuration
-    rule.samplingConfig = {
-      samplingPercentage: props.samplingPercentage ?? 10,
+  private buildRuleConfig(props: OnlineEvaluationProps): any {
+    const rule: any = {
+      samplingConfig: {
+        samplingPercentage: props.samplingPercentage ?? 10,
+      },
+      sessionConfig: {
+        sessionTimeoutMinutes: props.sessionTimeoutMinutes ?? 15,
+      },
     };
 
-    // Session configuration
-    rule.sessionConfig = {
-      sessionTimeoutMinutes: props.sessionTimeoutMinutes ?? 15,
-    };
-
-    // Filter configuration
     if (props.filters && props.filters.length > 0) {
       rule.filters = props.filters.map((f) => ({
         key: f.key,
         operator: f.operator,
-        value: this._formatFilterValue(f.value),
+        value: this.formatFilterValue(f.value),
       }));
     }
 
     return rule;
   }
 
-  /**
-   * Formats a filter value for the API.
-   * The API expects a union object with stringValue, doubleValue, or booleanValue.
-   */
-  private _formatFilterValue(value: string | number | boolean): any {
+  private formatFilterValue(value: string | number | boolean): any {
     if (typeof value === 'string') {
       return { stringValue: value };
     } else if (typeof value === 'number') {

@@ -17,10 +17,6 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import { EvaluationPerms } from './perms';
 
-/******************************************************************************
- *                                Interface
- *****************************************************************************/
-
 /**
  * Interface for OnlineEvaluation resources.
  */
@@ -91,10 +87,6 @@ export interface IOnlineEvaluation extends IResource, iam.IGrantable {
   metricEvaluationLatency(props?: MetricOptions): Metric;
 }
 
-/******************************************************************************
- *                        ABSTRACT BASE CLASS
- *****************************************************************************/
-
 /**
  * Abstract base class for OnlineEvaluation.
  * Contains methods and attributes valid for configurations either created with CDK or imported.
@@ -140,10 +132,6 @@ export abstract class OnlineEvaluationBase extends Resource implements IOnlineEv
   public grantAdmin(grantee: iam.IGrantable): iam.Grant {
     return this.grant(grantee, ...EvaluationPerms.ADMIN_PERMS);
   }
-
-  // ------------------------------------------------------
-  // Metrics
-  // ------------------------------------------------------
 
   /**
    * Return the given named metric for this evaluation configuration.

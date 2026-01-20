@@ -15,11 +15,8 @@
  * IAM permission constants for Online Evaluation configurations.
  */
 export namespace EvaluationPerms {
-  /******************************************************************************
-   *                         Control Plane Permissions
-   *****************************************************************************/
   /**
-   * Permissions to manage online evaluation configurations (CRUD)
+   * Permissions to manage online evaluation configurations (CRUD).
    */
   export const ADMIN_PERMS = [
     'bedrock-agentcore:CreateOnlineEvaluationConfig',
@@ -30,18 +27,15 @@ export namespace EvaluationPerms {
   ];
 
   /**
-   * Permissions to read online evaluation configurations
+   * Permissions to read online evaluation configurations.
    */
   export const READ_PERMS = [
     'bedrock-agentcore:GetOnlineEvaluationConfig',
     'bedrock-agentcore:ListOnlineEvaluationConfigs',
   ];
 
-  /******************************************************************************
-   *                         Execution Role Permissions
-   *****************************************************************************/
   /**
-   * Permissions required for the execution role to read CloudWatch Logs
+   * Permissions for the execution role to read CloudWatch Logs.
    */
   export const CLOUDWATCH_LOGS_READ_PERMS = [
     'logs:DescribeLogGroups',
@@ -50,7 +44,7 @@ export namespace EvaluationPerms {
   ];
 
   /**
-   * Permissions required for the execution role to invoke Bedrock models
+   * Permissions for the execution role to invoke Bedrock models.
    */
   export const BEDROCK_MODEL_PERMS = [
     'bedrock:InvokeModel',
@@ -58,7 +52,7 @@ export namespace EvaluationPerms {
   ];
 
   /**
-   * Permissions required for the execution role to write evaluation results
+   * Permissions for the execution role to write evaluation results.
    */
   export const CLOUDWATCH_LOGS_WRITE_PERMS = [
     'logs:CreateLogGroup',
@@ -67,7 +61,7 @@ export namespace EvaluationPerms {
   ];
 
   /**
-   * Permissions required for CloudWatch index policies (for Transaction Search)
+   * Permissions for CloudWatch index policies.
    */
   export const CLOUDWATCH_INDEX_POLICY_PERMS = [
     'logs:DescribeIndexPolicies',

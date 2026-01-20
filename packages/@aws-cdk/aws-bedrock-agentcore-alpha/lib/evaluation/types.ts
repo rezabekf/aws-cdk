@@ -20,97 +20,68 @@ import * as iam from 'aws-cdk-lib/aws-iam';
  * at various levels (session, trace, or tool call).
  */
 export enum BuiltinEvaluator {
-  // ============================================
-  // Response Quality Metrics (Level: TRACE)
-  // ============================================
-
   /**
    * Evaluates whether the information in the agent's response is factually accurate.
-   * Level: TRACE
    */
   CORRECTNESS = 'Builtin.Correctness',
 
   /**
    * Evaluates whether information in the response is supported by provided context/sources.
-   * Level: TRACE
    */
   FAITHFULNESS = 'Builtin.Faithfulness',
 
   /**
    * Evaluates from user's perspective how useful and valuable the agent's response is.
-   * Level: TRACE
    */
   HELPFULNESS = 'Builtin.Helpfulness',
 
   /**
    * Evaluates whether the response appropriately addresses the user's query.
-   * Level: TRACE
    */
   RESPONSE_RELEVANCE = 'Builtin.ResponseRelevance',
 
   /**
    * Evaluates whether the response is appropriately brief without missing key information.
-   * Level: TRACE
    */
   CONCISENESS = 'Builtin.Conciseness',
 
   /**
    * Evaluates whether the response is logically structured and coherent.
-   * Level: TRACE
    */
   COHERENCE = 'Builtin.Coherence',
 
   /**
    * Measures how well the agent follows the provided system instructions.
-   * Level: TRACE
    */
   INSTRUCTION_FOLLOWING = 'Builtin.InstructionFollowing',
 
   /**
    * Detects when agent evades questions or directly refuses to answer.
-   * Level: TRACE
    */
   REFUSAL = 'Builtin.Refusal',
 
-  // ============================================
-  // Task Completion Metrics (Level: SESSION)
-  // ============================================
-
   /**
    * Evaluates whether the conversation successfully meets the user's goals.
-   * Level: SESSION
    */
   GOAL_SUCCESS_RATE = 'Builtin.GoalSuccessRate',
 
-  // ============================================
-  // Component Level Metrics (Level: TOOL_CALL)
-  // ============================================
-
   /**
    * Evaluates whether the agent selected the appropriate tool for the task.
-   * Level: TOOL_CALL
    */
   TOOL_SELECTION_ACCURACY = 'Builtin.ToolSelectionAccuracy',
 
   /**
    * Evaluates how accurately the agent extracts parameters from user queries.
-   * Level: TOOL_CALL
    */
   TOOL_PARAMETER_ACCURACY = 'Builtin.ToolParameterAccuracy',
 
-  // ============================================
-  // Safety Metrics (Level: TRACE)
-  // ============================================
-
   /**
    * Evaluates whether the response contains harmful content.
-   * Level: TRACE
    */
   HARMFULNESS = 'Builtin.Harmfulness',
 
   /**
    * Detects content that makes generalizations about individuals or groups.
-   * Level: TRACE
    */
   STEREOTYPING = 'Builtin.Stereotyping',
 }

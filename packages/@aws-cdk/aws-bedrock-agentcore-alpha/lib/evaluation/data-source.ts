@@ -96,7 +96,6 @@ export class DataSourceConfig {
     runtime: IBedrockAgentRuntime,
     endpoint?: IRuntimeEndpoint | string,
   ): DataSourceConfig {
-    // Determine endpoint name - default to 'DEFAULT' if not provided
     let endpointName: string;
     if (endpoint === undefined) {
       endpointName = 'DEFAULT';
@@ -106,9 +105,7 @@ export class DataSourceConfig {
       endpointName = endpoint.endpointName;
     }
 
-    // Log group follows pattern: /aws/bedrock-agentcore/runtimes/{runtimeId}-{endpointName}
     const logGroupName = `/aws/bedrock-agentcore/runtimes/${runtime.agentRuntimeId}-${endpointName}`;
-    // Service name follows pattern: {runtimeName}.{endpointName}
     const serviceName = `${runtime.agentRuntimeName}.${endpointName}`;
 
     return new DataSourceConfig({
