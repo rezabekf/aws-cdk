@@ -110,6 +110,9 @@ export abstract class OnlineEvaluationBase extends Resource implements IOnlineEv
 
   /**
    * Grants IAM actions to the IAM Principal.
+   *
+   * [disable-awslint:no-grants]
+   *
    * @param grantee - The IAM principal to grant permissions to
    * @param actions - The actions to grant
    * @returns An IAM Grant object representing the granted permissions
@@ -125,6 +128,8 @@ export abstract class OnlineEvaluationBase extends Resource implements IOnlineEv
 
   /**
    * Grant the given principal identity permissions to manage this configuration.
+   *
+   * [disable-awslint:no-grants]
    *
    * @param grantee - The IAM principal to grant admin permissions to
    * @returns An IAM Grant object representing the granted permissions
