@@ -1296,6 +1296,9 @@ export class Cluster extends ClusterBase {
       // give the handler role admin access to the cluster
       // so it can deploy/query any resource.
       this._clusterAdminAccess = this.grantClusterAdmin('ClusterAdminRoleAccess', this._kubectlProvider?.role!.roleArn);
+
+      // Ensure kubectl is marked as ready only after admin access has been granted
+      this._kubectlReadyBarrier.node.addDependency(this._clusterAdminAccess);
     }
 
     // do not create a masters role if one is not provided. Trusting the accountRootPrincipal() is too permissive.
@@ -1353,6 +1356,7 @@ export class Cluster extends ClusterBase {
    * This method creates an `AccessEntry` construct that grants the specified IAM principal the access permissions
    * defined by the provided `IAccessPolicy` array. This allows the IAM principal to perform the actions permitted
    * by the access policies within the EKS cluster.
+   * [disable-awslint:no-grants]
    *
    * @param id - The ID of the `AccessEntry` construct to be created.
    * @param principal - The IAM principal (role or user) to be granted access to the EKS cluster.
@@ -1369,6 +1373,7 @@ export class Cluster extends ClusterBase {
    * This method creates an `AccessEntry` construct that grants the specified IAM principal the cluster admin
    * access permissions. This allows the IAM principal to perform the actions permitted
    * by the cluster admin acces.
+   * [disable-awslint:no-grants]
    *
    * @param id - The ID of the `AccessEntry` construct to be created.
    * @param principal - The IAM principal (role or user) to be granted access to the EKS cluster.
