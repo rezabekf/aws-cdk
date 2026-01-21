@@ -71,6 +71,15 @@ This construct library facilitates the deployment of Bedrock AgentCore primitive
   - [Basic Memory Creation](#basic-memory-creation)
   - [LTM Memory Extraction Stategies](#ltm-memory-extraction-stategies)
   - [Memory Strategy Methods](#memory-strategy-methods)
+- [Online Evaluation](#online-evaluation)
+  - [Online Evaluation Properties](#online-evaluation-properties)
+  - [Basic Online Evaluation Creation](#basic-online-evaluation-creation)
+  - [Built-in Evaluators](#built-in-evaluators)
+  - [Data Source Configuration](#data-source-configuration)
+  - [Sampling and Filtering](#sampling-and-filtering)
+  - [Online Evaluation with Custom Execution Role](#online-evaluation-with-custom-execution-role)
+  - [Online Evaluation IAM Permissions](#online-evaluation-iam-permissions)
+  - [Online Evaluation Metrics](#online-evaluation-metrics)
 - [Amazon Bedrock AgentCore Construct Library](#amazon-bedrock-agentcore-construct-library)
   - [Table of contents](#table-of-contents)
   - [AgentCore Runtime](#agentcore-runtime)
@@ -2196,4 +2205,276 @@ const memory = new agentcore.Memory(this, "test-memory", {
 // Add strategies after instantiation
 memory.addMemoryStrategy(agentcore.MemoryStrategy.usingBuiltInSummarization());
 memory.addMemoryStrategy(agentcore.MemoryStrategy.usingBuiltInSemantic());
+```
+
+## Online Evaluation
+
+The Online Evaluation construct enables continuous monitoring and assessment of your agent's performance using live traffic. It automatically samples agent traces from CloudWatch Logs or Agent Endpoints and applies built-in evaluators to assess quality metrics like helpfulness, correctness, and safety.
+
+### Online Evaluation Properties
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `configName` | `string` | Yes | The name of the online evaluation configuration. Must start with a letter and can contain a-z, A-Z, 0-9, _ (underscore). Maximum 48 characters |
+| `evaluators` | `EvaluatorReference[]` | Yes | The list of built-in evaluators to apply during evaluation. Minimum 1, maximum 10 |
+| `dataSource` | `DataSourceConfig` | Yes | The data source configuration specifying where to read agent traces from |
+| `executionRole` | `iam.IRole` | No | The IAM role for evaluation. If not provided, a role will be created automatically |
+| `description` | `string` | No | Description of the evaluation configuration. Maximum 200 characters |
+| `samplingPercentage` | `number` | No | Percentage of traces to sample (0.01-100). Default: 10 |
+| `filters` | `FilterConfig[]` | No | Filters to determine which traces to evaluate. Maximum 5 |
+| `sessionTimeoutMinutes` | `number` | No | Minutes of inactivity before a session is considered complete (1-1440). Default: 15 |
+| `enableOnCreate` | `boolean` | No | Whether to enable evaluation immediately. Default: true |
+| `tags` | `{ [key: string]: string }` | No | Tags for the evaluation configuration |
+
+### Basic Online Evaluation Creation
+
+Create an online evaluation configuration with built-in evaluators:
+
+```typescript fixture=default
+const evaluation = new agentcore.OnlineEvaluation(this, 'MyEvaluation', {
+  configName: 'my_evaluation',
+  evaluators: [
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.CORRECTNESS),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromCloudWatchLogs({
+    logGroupNames: ['/aws/bedrock-agentcore/my-agent'],
+    serviceNames: ['my-agent.default'],
+  }),
+});
+```
+
+### Built-in Evaluators
+
+Amazon Bedrock AgentCore provides 13 built-in evaluators that assess different aspects of agent performance:
+
+**Session-Level Evaluators:**
+
+- `GOAL_SUCCESS_RATE` - Evaluates whether the conversation successfully meets the user's goals
+
+**Trace-Level Evaluators:**
+
+- `HELPFULNESS` - How useful and valuable the agent's response is
+- `CORRECTNESS` - Whether the information is factually accurate
+- `FAITHFULNESS` - Whether the response is faithful to the provided context
+- `HARMFULNESS` - Whether the response contains harmful content
+- `STEREOTYPING` - Detects content that makes generalizations about individuals or groups
+- `REFUSAL` - Whether the agent appropriately refuses harmful requests
+- `COHERENCE` - Whether the response is logically coherent
+- `RESPONSE_RELEVANCE` - Whether the response appropriately addresses the user's query
+- `CONCISENESS` - Whether the response is appropriately concise
+- `INSTRUCTION_FOLLOWING` - How well the agent follows system instructions
+
+**Tool Call-Level Evaluators:**
+
+- `TOOL_SELECTION_ACCURACY` - Whether the agent selected the appropriate tool
+- `TOOL_PARAMETER_ACCURACY` - How accurately the agent extracts parameters from user queries
+
+```typescript fixture=default
+const evaluation = new agentcore.OnlineEvaluation(this, 'ComprehensiveEval', {
+  configName: 'comprehensive_evaluation',
+  evaluators: [
+    // Session level
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.GOAL_SUCCESS_RATE),
+    // Trace level - quality
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.CORRECTNESS),
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.COHERENCE),
+    // Trace level - safety
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HARMFULNESS),
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.STEREOTYPING),
+    // Tool call level
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.TOOL_SELECTION_ACCURACY),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromCloudWatchLogs({
+    logGroupNames: ['/aws/bedrock-agentcore/my-agent'],
+    serviceNames: ['my-agent.default'],
+  }),
+});
+```
+
+### Data Source Configuration
+
+Online evaluation supports two types of data sources:
+
+**AgentCore Runtime Data Source (Recommended):**
+
+For runtimes created within your CDK app, use `fromAgentRuntimeEndpoint()` which automatically derives the CloudWatch log group and service name:
+
+```typescript fixture=default
+const repository = new ecr.Repository(this, 'TestRepository', {
+  repositoryName: 'test-agent-runtime',
+});
+
+const runtime = new agentcore.Runtime(this, 'MyRuntime', {
+  runtimeName: 'my_agent',
+  agentRuntimeArtifact: agentcore.AgentRuntimeArtifact.fromEcrRepository(repository, 'v1.0.0'),
+});
+
+// Using default endpoint (simplest)
+const evaluation = new agentcore.OnlineEvaluation(this, 'RuntimeEval', {
+  configName: 'runtime_evaluation',
+  evaluators: [
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime),
+});
+```
+
+You can also specify a specific endpoint:
+
+```typescript fixture=default
+declare const runtime: agentcore.Runtime;
+
+// Using a specific endpoint construct
+const prodEndpoint = runtime.addEndpoint('PROD');
+const evaluation = new agentcore.OnlineEvaluation(this, 'ProdEval', {
+  configName: 'prod_evaluation',
+  evaluators: [
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.CORRECTNESS),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime, prodEndpoint),
+});
+
+// Or using endpoint name as string
+const stagingEval = new agentcore.OnlineEvaluation(this, 'StagingEval', {
+  configName: 'staging_evaluation',
+  evaluators: [
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.CORRECTNESS),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromAgentRuntimeEndpoint(runtime, 'STAGING'),
+});
+```
+
+**CloudWatch Logs Data Source:**
+
+For external agents or when you need to specify log groups directly:
+
+```typescript fixture=default
+const evaluation = new agentcore.OnlineEvaluation(this, 'CloudWatchEval', {
+  configName: 'cloudwatch_evaluation',
+  evaluators: [
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromCloudWatchLogs({
+    logGroupNames: [
+      '/aws/bedrock-agentcore/agent1',
+      '/aws/bedrock-agentcore/agent2',
+    ],
+    serviceNames: ['agent1.default', 'agent2.production'],
+  }),
+});
+```
+
+### Sampling and Filtering
+
+Configure sampling percentage and filters to control which traces are evaluated:
+
+```typescript fixture=default
+const evaluation = new agentcore.OnlineEvaluation(this, 'FilteredEval', {
+  configName: 'filtered_evaluation',
+  evaluators: [
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromCloudWatchLogs({
+    logGroupNames: ['/aws/bedrock-agentcore/my-agent'],
+    serviceNames: ['my-agent.default'],
+  }),
+  // Sample 25% of traces
+  samplingPercentage: 25,
+  // Only evaluate traces matching these filters
+  filters: [
+    {
+      key: 'user.region',
+      operator: agentcore.FilterOperator.EQUALS,
+      value: 'us-east-1',
+    },
+    {
+      key: 'session.duration',
+      operator: agentcore.FilterOperator.GREATER_THAN,
+      value: 60,
+    },
+  ],
+  // Consider sessions complete after 30 minutes of inactivity
+  sessionTimeoutMinutes: 30,
+});
+```
+
+### Online Evaluation with Custom Execution Role
+
+Provide a custom IAM role for the evaluation execution:
+
+```typescript fixture=default
+const executionRole = new iam.Role(this, 'EvaluationRole', {
+  assumedBy: new iam.ServicePrincipal('bedrock-agentcore.amazonaws.com'),
+  description: 'Custom role for online evaluation',
+});
+
+// Add required permissions
+executionRole.addToPolicy(new iam.PolicyStatement({
+  actions: [
+    'logs:DescribeLogGroups',
+    'logs:GetQueryResults',
+    'logs:StartQuery',
+  ],
+  resources: ['arn:aws:logs:*:*:log-group:/aws/bedrock-agentcore/*'],
+}));
+
+const evaluation = new agentcore.OnlineEvaluation(this, 'CustomRoleEval', {
+  configName: 'custom_role_evaluation',
+  evaluators: [
+    agentcore.EvaluatorReference.builtin(agentcore.BuiltinEvaluator.HELPFULNESS),
+  ],
+  dataSource: agentcore.DataSourceConfig.fromCloudWatchLogs({
+    logGroupNames: ['/aws/bedrock-agentcore/my-agent'],
+    serviceNames: ['my-agent.default'],
+  }),
+  executionRole: executionRole,
+});
+```
+
+### Online Evaluation IAM Permissions
+
+Grant IAM permissions to manage or read evaluation configurations:
+
+```typescript fixture=default
+declare const evaluation: agentcore.OnlineEvaluation;
+declare const role: iam.IRole;
+
+// Grant full admin permissions (create, read, update, delete)
+evaluation.grantAdmin(role);
+
+// Grant specific permissions
+evaluation.grant(role,
+  'bedrock-agentcore:GetOnlineEvaluation',
+  'bedrock-agentcore:UpdateOnlineEvaluation',
+);
+```
+
+### Online Evaluation Metrics
+
+Monitor evaluation performance with CloudWatch metrics:
+
+```typescript fixture=default
+declare const evaluation: agentcore.OnlineEvaluation;
+
+// Create a metric for evaluation execution count
+const executionMetric = evaluation.metric('ExecutionCount', {
+  statistic: 'Sum',
+  period: cdk.Duration.minutes(5),
+});
+
+// Create a metric for evaluation errors
+const errorMetric = evaluation.metric('ExecutionErrors', {
+  statistic: 'Sum',
+  period: cdk.Duration.minutes(5),
+});
+
+// Create an alarm for high error rate
+new cdk.aws_cloudwatch.Alarm(this, 'EvaluationErrorAlarm', {
+  metric: errorMetric,
+  threshold: 10,
+  evaluationPeriods: 2,
+  alarmDescription: 'Alert when evaluation errors exceed threshold',
+});
 ```

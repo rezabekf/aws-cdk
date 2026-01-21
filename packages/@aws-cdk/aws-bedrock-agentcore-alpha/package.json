@@ -119,6 +119,7 @@
   "awslint": {
     "exclude": [
       "props-physical-name:@aws-cdk/aws-bedrock-agentcore-alpha.RuntimeEndpointProps",
+      "props-physical-name:@aws-cdk/aws-bedrock-agentcore-alpha.OnlineEvaluationProps",
       "prefer-ref-interface:@aws-cdk/aws-bedrock-agentcore-alpha.BrowserCustomAttributes.securityGroups",
       "prefer-ref-interface:@aws-cdk/aws-bedrock-agentcore-alpha.BrowserCustomProps.executionRole",
       "prefer-ref-interface:@aws-cdk/aws-bedrock-agentcore-alpha.CodeInterpreterCustomAttributes.securityGroups",
@@ -150,6 +151,7 @@
       "prefer-ref-interface:@aws-cdk/aws-bedrock-agentcore-alpha.MemoryProps.kmsKey",
       "prefer-ref-interface:@aws-cdk/aws-bedrock-agentcore-alpha.AgentRuntimeAttributes.securityGroups",
       "prefer-ref-interface:@aws-cdk/aws-bedrock-agentcore-alpha.RuntimeProps.executionRole",
+      "prefer-ref-interface:@aws-cdk/aws-bedrock-agentcore-alpha.OnlineEvaluationProps.executionRole",
       "interface-extends-ref:@aws-cdk/aws-bedrock-agentcore-alpha.IBedrockAgentRuntime",
       "interface-extends-ref:@aws-cdk/aws-bedrock-agentcore-alpha.IBrowserCustom",
       "interface-extends-ref:@aws-cdk/aws-bedrock-agentcore-alpha.ICodeInterpreterCustom",
@@ -157,7 +159,8 @@
       "interface-extends-ref:@aws-cdk/aws-bedrock-agentcore-alpha.IGatewayTarget",
       "interface-extends-ref:@aws-cdk/aws-bedrock-agentcore-alpha.IMcpGatewayTarget",
       "interface-extends-ref:@aws-cdk/aws-bedrock-agentcore-alpha.IMemory",
-      "interface-extends-ref:@aws-cdk/aws-bedrock-agentcore-alpha.IRuntimeEndpoint"
+      "interface-extends-ref:@aws-cdk/aws-bedrock-agentcore-alpha.IRuntimeEndpoint",
+      "interface-extends-ref:@aws-cdk/aws-bedrock-agentcore-alpha.IOnlineEvaluation"
     ]
   },
   "jsiiRosetta": {
